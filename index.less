@@ -1,0 +1,18 @@
+.less-autocompile.overlay {
+  opacity: 0;
+  -webkit-transition: opacity ease-in-out .4s;
+
+  &.animate { opacity: 1; }
+
+  .loading {
+    position: absolute;
+    right: 0;
+    top: 10px;
+  }
+
+  .list-tree {
+    .list-item {
+      white-space: nowrap;
+    }
+  }
+}
