@@ -1,7 +1,7 @@
 {
   "name": "less-autocompile",
   "main": "./lib/less-autocompile",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Auto compile LESS.",
   "repository": "https://github.com/lohek/less-autocompile",
   "license": "MIT",
