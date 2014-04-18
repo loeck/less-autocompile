@@ -4,7 +4,7 @@ Auto compile LESS file on save.
 
 ---
 
-Add the parameters on the first line of the file LESS.
+Add the parameters on the first line of the LESS file.
 
 ```
 out (string):  path of CSS file to create
