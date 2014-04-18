@@ -1,18 +1,18 @@
-.less-autocompile.overlay {
-  opacity: 0;
-  -webkit-transition: opacity ease-in-out .4s;
-
-  &.animate { opacity: 1; }
-
+.less-autocompile.tool-panel {
   .loading {
-    position: absolute;
-    right: 0;
-    top: 10px;
+    position: relative;
+    top: -4px;
   }
 
-  .list-tree {
-    .list-item {
-      white-space: nowrap;
+  .panel-heading {
+    &.no-border { border-bottom: 0; }
+  }
+
+  .panel-body {
+    p {
+      margin-bottom: 10px;
+
+      &:last-child { margin-bottom: 0; }
     }
   }
 }

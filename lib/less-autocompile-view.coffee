@@ -3,19 +3,24 @@
 module.exports =
 class LessAutocompileView extends View
   @content: ->
-    @div class: 'less-autocompile overlay from-bottom hide', =>
-      @span class: 'inline-block loading loading-spinner-tiny hide'
-      @div class: 'package-name', =>
-        @span 'LESS AutoCompile', class: 'inline-block highlight'
-      @ul class: 'list-tree'
+    @div class: 'less-autocompile tool-panel panel-bottom hide', =>
+      @div class: "inset-panel", =>
+        @div class: "panel-heading no-border", =>
+          @span class: 'inline-block pull-right loading loading-spinner-tiny hide'
+          @span 'LESS AutoCompile'
+        @div class: "panel-body padded hide"
 
   initialize: (serializeState) ->
+    @inProgress = false
     @timeout = null
-    @messageListTree = @find('.list-tree')
-    @messageLoading = @find('.loading')
+
+    @panelHeading = @find('.panel-heading')
+    @panelBody = @find('.panel-body')
+    @panelLoading = @find('.loading')
 
     atom.workspaceView.on 'core:save', (e) =>
-      @compile atom.workspace.activePaneItem
+      if !@inProgress
+        @compile atom.workspace.activePaneItem
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
@@ -85,47 +90,43 @@ class LessAutocompileView extends View
     mkdirp newPath, (error) ->
       fs.writeFile newFile, contents, callback
 
-  addMessageOverlay: (icon, typeMessage, message)->
-    @messageListTree.append $$ ->
-      @li class: 'list-item', =>
+  addMessagePanel: (icon, typeMessage, message)->
+    @panelHeading.removeClass 'no-border'
+
+    @panelBody.removeClass('hide').append $$ ->
+      @p =>
         @span class: "icon #{icon} text-#{typeMessage}", message
 
-  showOverlay: ->
-    @messageListTree.empty()
-    @messageLoading.removeClass 'hide'
-
-    atom.workspaceView.append this
-
-    @removeClass 'hide'
+  showPanel: ->
+    @inProgress = true
 
     clearTimeout @timeout
 
-    setTimeout =>
-      @addClass 'animate'
-    , 1
+    @panelHeading.addClass 'no-border'
+    @panelBody.addClass('hide').empty()
+    @panelLoading.removeClass 'hide'
 
-  hideOverlay: ->
-    @messageLoading.addClass 'hide'
+    atom.workspaceView.prependToBottom this
+
+    @removeClass 'hide'
+
+  hidePanel: ->
+    @panelLoading.addClass 'hide'
 
     @timeout = setTimeout =>
-      @removeClass 'animate'
-
-      setTimeout =>
-        @addClass 'hide'
-      , 400
+      @addClass 'hide'
     , 3000
 
   compileLess: (filePath) ->
     fs = require 'fs'
     less = require 'less'
     path = require 'path'
-    sugar = require 'sugar'
 
     compile = (params) =>
       if params.out is false
         return
 
-      @showOverlay()
+      @showPanel()
 
       parser = new less.Parser
         paths: [path.dirname path.resolve(params.file, params.out)]
@@ -133,10 +134,11 @@ class LessAutocompileView extends View
 
       fs.readFile params.file, (error, data) =>
         parser.parse data.toString(), (error, tree) =>
-          @addMessageOverlay 'icon-file-text', 'info', filePath.truncate(50, 'left')
+          @addMessagePanel 'icon-file-text', 'info', filePath
 
           if error
-            @addMessageOverlay '', 'error', error.message + ' : ' + error.filename.truncate(50, 'left')
+            @inProgress = false
+            @addMessagePanel '', 'error', error.message + ' : ' + error.filename
           else
             css = tree.toCSS
               compress: params.compress
@@ -145,9 +147,10 @@ class LessAutocompileView extends View
             newPath = path.dirname newFile
 
             @writeFile css, newFile, newPath, =>
-              @addMessageOverlay 'icon-file-symlink-file', 'success', newFile.truncate(50, 'left')
+              @inProgress = false
+              @addMessagePanel 'icon-file-symlink-file', 'success', newFile
 
-          @hideOverlay()
+          @hidePanel()
 
     @getParams filePath, (params) ->
       compile params
