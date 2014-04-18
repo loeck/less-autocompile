@@ -24,4 +24,4 @@ main (string): path to your main LESS file to be compiled
 // main: init.less
 ```
 
-![](http://uppix.net/5NKVmJ.gif)
+![](http://uppix.net/2pENDo.gif)
