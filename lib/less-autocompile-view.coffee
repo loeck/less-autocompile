@@ -138,7 +138,7 @@ class LessAutocompileView extends View
 
           if error
             @inProgress = false
-            @addMessagePanel '', 'error', error.message + ' : ' + error.filename
+            @addMessagePanel '', 'error', "#{error.message} - index: #{error.index}, line: #{error.line}, file: #{error.filename}"
           else
             css = tree.toCSS
               compress: params.compress
