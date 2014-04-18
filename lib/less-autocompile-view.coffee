@@ -71,6 +71,15 @@ class LessAutocompileView extends View
       else
         callback params
 
+    if !fs.existsSync filePath
+      @showPanel()
+      @addMessagePanel '', 'error', "main: #{filePath} not exist"
+      @hidePanel()
+
+      @inProgress = false
+
+      return null
+
     rl = readline.createInterface
       input: fs.createReadStream filePath
       output: process.stdout
@@ -153,4 +162,5 @@ class LessAutocompileView extends View
           @hidePanel()
 
     @getParams filePath, (params) ->
-      compile params
+      if params isnt null
+        compile params
