@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "less": "1.7.0",
-    "mkdirp": "latest"
+    "mkdirp": "latest",
+    "sugar": "latest"
   }
 }

@@ -115,32 +115,11 @@ class LessAutocompileView extends View
       , 400
     , 3000
 
-  truncate: (str, chars, suffix, left) ->
-    suffix = if 'string' == typeof chars then chars else suffix
-    chars = if 'number' == typeof chars then chars else 200
-
-    suffix = suffix || ''
-
-    if !str || !str.length || str.length <= chars
-      return str
-
-    left = left isnt false
-    mod = if left then false else true
-    end = if mod then str.length - chars else chars
-    safe = if mod then str.length else 0
-    newStr = str.substring(safe, end)
-    perfect = if left then str[end] == ' ' else (str[end - 1] == ' ');
-
-    if !perfect
-      safe = if left then /\s*[^\s|.]*$/ else /^[^\s|.]*\s*/
-      newStr = newStr.replace(safe, '')
-
-    return if left then newStr + suffix else suffix + newStr
-
   compileLess: (filePath) ->
     fs = require 'fs'
     less = require 'less'
     path = require 'path'
+    sugar = require 'sugar'
 
     compile = (params) =>
       if params.out is false
@@ -154,14 +133,10 @@ class LessAutocompileView extends View
 
       fs.readFile params.file, (error, data) =>
         parser.parse data.toString(), (error, tree) =>
-          truncateFilePath = @truncate(filePath, 70, '..', false)
-
-          @addMessageOverlay 'icon-file-text', 'info', truncateFilePath
+          @addMessageOverlay 'icon-file-text', 'info', filePath.truncate(50, 'left')
 
           if error
-            truncateFilenameError = @truncate(error.filename, 70, '..', false)
-
-            @addMessageOverlay '', 'error', error.message + ' : ' + truncateFilenameError
+            @addMessageOverlay '', 'error', error.message + ' : ' + error.filename.truncate(50, 'left')
           else
             css = tree.toCSS
               compress: params.compress
@@ -170,9 +145,7 @@ class LessAutocompileView extends View
             newPath = path.dirname newFile
 
             @writeFile css, newFile, newPath, =>
-              truncateNewFile = @truncate(newFile, 70, '..', false)
-
-              @addMessageOverlay 'icon-file-symlink-file', 'success', truncateNewFile
+              @addMessageOverlay 'icon-file-symlink-file', 'success', newFile.truncate(50, 'left')
 
           @hideOverlay()
 
