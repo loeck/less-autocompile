@@ -145,19 +145,23 @@ class LessAutocompileView extends View
         parser.parse data.toString(), (error, tree) =>
           @addMessagePanel 'icon-file-text', 'info', filePath
 
-          if error
-            @inProgress = false
-            @addMessagePanel '', 'error', "#{error.message} - index: #{error.index}, line: #{error.line}, file: #{error.filename}"
-          else
-            css = tree.toCSS
-              compress: params.compress
-
-            newFile = path.resolve(path.dirname(params.file), params.out)
-            newPath = path.dirname newFile
-
-            @writeFile css, newFile, newPath, =>
+          try
+            if error
               @inProgress = false
-              @addMessagePanel 'icon-file-symlink-file', 'success', newFile
+              @addMessagePanel '', 'error', "#{error.message} - index: #{error.index}, line: #{error.line}, file: #{error.filename}"
+            else
+              css = tree.toCSS
+                compress: params.compress
+
+              newFile = path.resolve(path.dirname(params.file), params.out)
+              newPath = path.dirname newFile
+
+              @writeFile css, newFile, newPath, =>
+                @inProgress = false
+                @addMessagePanel 'icon-file-symlink-file', 'success', newFile
+          catch e
+            @inProgress = false
+            @addMessagePanel '', 'error', "#{e.message} - index: #{e.index}, line: #{e.line}, file: #{e.filename}"
 
           @hidePanel()
 
