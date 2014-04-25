@@ -138,7 +138,7 @@ class LessAutocompileView extends View
       @showPanel()
 
       parser = new less.Parser
-        paths: [path.dirname path.resolve(params.file, params.out)]
+        paths: [path.dirname path.resolve(params.file)]
         filename: path.basename params.file
 
       fs.readFile params.file, (error, data) =>
