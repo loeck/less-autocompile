@@ -48,6 +48,8 @@ class LessAutocompileView extends View
       compress: false
       main: false
       out: false
+      sourceMap: true
+      sourceMapDir: filePath
 
     parse = (firstLine) =>
       firstLine.split(',').forEach (item) ->
@@ -140,10 +142,23 @@ class LessAutocompileView extends View
       parser = new less.Parser
         paths: [path.dirname path.resolve(params.file)]
         filename: path.basename params.file
+        sourceMap: true
+
 
       fs.readFile params.file, (error, data) =>
         parser.parse data.toString(), (error, tree) =>
           @addMessagePanel 'icon-file-text', 'info', filePath
+
+          if params.sourceMap
+            source_map = tree.toCSS
+              sourceMap: params.sourceMap
+
+            mapFile = path.resolve(path.dirname(params.file), params.out.replace(".css", ".map"))
+            mapPath = path.dirname mapFile
+
+            @writeFile source_map, mapFile, mapPath, =>
+              @inProgress = false
+              @addMessagePanel 'icon-file-symlink-file', 'success', mapFile
 
           try
             if error
