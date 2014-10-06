@@ -1,15 +1,15 @@
 {
   "name": "less-autocompile",
   "main": "./lib/less-autocompile",
-  "version": "0.3.3",
+  "version": "0.5.0",
   "description": "Auto compile LESS.",
   "repository": "https://github.com/lohek/less-autocompile",
   "license": "MIT",
   "engines": {
-    "atom": ">0.50.0"
+    "atom": "~0.50.0"
   },
   "dependencies": {
-    "less": "1.7.0",
-    "mkdirp": "latest"
+    "less": "~1.7.0",
+    "mkdirp": "~0.5.0"
   }
 }

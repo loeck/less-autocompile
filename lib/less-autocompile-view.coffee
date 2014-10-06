@@ -1,6 +1,7 @@
 {View, $, $$} = require 'atom'
 
 module.exports =
+
 class LessAutocompileView extends View
   @content: ->
     @div class: 'less-autocompile tool-panel panel-bottom hide', =>
@@ -30,13 +31,14 @@ class LessAutocompileView extends View
     @detach()
 
   compile: (editor) ->
+
     path = require 'path'
+    if typeof editor != "undefined"
+      filePath = editor.getUri()
+      fileExt = path.extname filePath
 
-    filePath = editor.getUri()
-    fileExt = path.extname filePath
-
-    if fileExt == '.less'
-      @compileLess filePath
+      if fileExt == '.less'
+        @compileLess filePath
 
   getParams: (filePath, callback) ->
     fs = require 'fs'
@@ -45,9 +47,11 @@ class LessAutocompileView extends View
 
     params =
       file: filePath
-      compress: false
+      compress: null
       main: false
       out: false
+      sourceMap: null
+      sourceMapDir: filePath
 
     parse = (firstLine) =>
       firstLine.split(',').forEach (item) ->
@@ -140,18 +144,38 @@ class LessAutocompileView extends View
       parser = new less.Parser
         paths: [path.dirname path.resolve(params.file)]
         filename: path.basename params.file
+        sourceMap: true
+
 
       fs.readFile params.file, (error, data) =>
         parser.parse data.toString(), (error, tree) =>
           @addMessagePanel 'icon-file-text', 'info', filePath
+
+          if params.sourceMap == null
+            params.sourceMap = atom.config.get('less-autocompile.makeSourceMap')
+
+          if params.sourceMap
+            source_map = tree.toCSS
+              sourceMap: params.sourceMap
+
+            mapFile = path.resolve(path.dirname(params.file), params.out.replace(".css", ".map"))
+            mapPath = path.dirname mapFile
+
+            @writeFile source_map, mapFile, mapPath, =>
+              @inProgress = false
+              @addMessagePanel 'icon-file-symlink-file', 'success', mapFile
 
           try
             if error
               @inProgress = false
               @addMessagePanel '', 'error', "#{error.message} - index: #{error.index}, line: #{error.line}, file: #{error.filename}"
             else
+
+              if params.compress == null
+                params.compress = atom.config.get('less-autocompile.compressCss')
+
               css = tree.toCSS
-                compress: params.compress
+                compress: JSON.parse(params.compress)
 
               newFile = path.resolve(path.dirname(params.file), params.out)
               newPath = path.dirname newFile
