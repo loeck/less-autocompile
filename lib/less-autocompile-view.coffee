@@ -1,6 +1,7 @@
 {View, $, $$} = require 'atom'
 
 module.exports =
+
 class LessAutocompileView extends View
   @content: ->
     @div class: 'less-autocompile tool-panel panel-bottom hide', =>
@@ -46,10 +47,10 @@ class LessAutocompileView extends View
 
     params =
       file: filePath
-      compress: false
+      compress: null
       main: false
       out: false
-      sourceMap: true
+      sourceMap: null
       sourceMapDir: filePath
 
     parse = (firstLine) =>
@@ -150,6 +151,9 @@ class LessAutocompileView extends View
         parser.parse data.toString(), (error, tree) =>
           @addMessagePanel 'icon-file-text', 'info', filePath
 
+          if params.sourceMap == null
+            params.sourceMap = atom.config.get('less-autocompile.makeSourceMap')
+
           if params.sourceMap
             source_map = tree.toCSS
               sourceMap: params.sourceMap
@@ -166,8 +170,12 @@ class LessAutocompileView extends View
               @inProgress = false
               @addMessagePanel '', 'error', "#{error.message} - index: #{error.index}, line: #{error.line}, file: #{error.filename}"
             else
+
+              if params.compress == null
+                params.compress = atom.config.get('less-autocompile.compressCss')
+
               css = tree.toCSS
-                compress: params.compress
+                compress: JSON.parse(params.compress)
 
               newFile = path.resolve(path.dirname(params.file), params.out)
               newPath = path.dirname newFile
