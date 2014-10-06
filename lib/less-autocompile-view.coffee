@@ -30,13 +30,14 @@ class LessAutocompileView extends View
     @detach()
 
   compile: (editor) ->
+
     path = require 'path'
+    if typeof editor != "undefined"
+      filePath = editor.getUri()
+      fileExt = path.extname filePath
 
-    filePath = editor.getUri()
-    fileExt = path.extname filePath
-
-    if fileExt == '.less'
-      @compileLess filePath
+      if fileExt == '.less'
+        @compileLess filePath
 
   getParams: (filePath, callback) ->
     fs = require 'fs'
