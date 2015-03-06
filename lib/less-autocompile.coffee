@@ -1,6 +1,7 @@
-LessAutocompileView = require './less-autocompile-view'
+LessAutocompileView   = require './less-autocompile-view'
+{CompositeDisposable} = require 'atom'
 
-module.exports =
+module.exports = LessAutocompile =
   lessAutocompileView: null
 
   activate: (state) ->
