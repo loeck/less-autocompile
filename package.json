@@ -1,0 +1,18 @@
+{
+  "name": "less-compiler",
+  "main": "./lib/less-compiler",
+  "version": "0.6.1",
+  "description": "Auto compile LESS.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Azakur4/less-compiler"
+  },
+  "license": "MIT",
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "dependencies": {
+    "less": "1.7.0",
+    "mkdirp": "latest"
+  }
+}
