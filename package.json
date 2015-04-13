@@ -1,7 +1,7 @@
 {
   "name": "less-compiler",
   "main": "./lib/less-compiler",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Auto compile LESS.",
   "repository": {
     "type": "git",
