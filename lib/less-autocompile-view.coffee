@@ -5,6 +5,8 @@ mkdirp   = require 'mkdirp'
 path     = require 'path'
 readline = require 'readline'
 
+lessPlugins = require './less-plugins'
+
 module.exports =
 class LessAutocompileView
   constructor: (serializeState) ->
@@ -71,6 +73,8 @@ class LessAutocompileView
       filename: path.basename params.file
       compress: if params.compress == 'true' then true else false
       sourceMap: if params.sourcemap == 'true' then {} else false
+
+    lessPlugins params, optionsLess
 
     rl = readline.createInterface
       input: fs.createReadStream params.file
