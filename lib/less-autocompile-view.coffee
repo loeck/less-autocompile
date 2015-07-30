@@ -71,6 +71,7 @@ class LessAutocompileView
       filename: path.basename params.file
       compress: if params.compress == 'true' then true else false
       sourceMap: if params.sourcemap == 'true' then {} else false
+      strictMath: if params.strictmath == 'true' then {} else false
 
     rl = readline.createInterface
       input: fs.createReadStream params.file
