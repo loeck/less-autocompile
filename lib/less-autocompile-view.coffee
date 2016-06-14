@@ -5,20 +5,35 @@ mkdirp   = require 'mkdirp'
 path     = require 'path'
 readline = require 'readline'
 
+{CompositeDisposable} = require 'atom'
+
+LessGrammar = atom.grammars.grammarForScopeName 'source.css.less'
+
 module.exports =
 class LessAutocompileView
   constructor: (serializeState) ->
-    atom.commands.add 'atom-workspace', 'core:save': => @handleSave()
+    disposables = new CompositeDisposable()
+    disposables.add atom.workspace.observeTextEditors (textEditor) =>
+      if textEditor.getGrammar() != LessGrammar
+        return
+      textEditorDisposable = new CompositeDisposable(
+        textEditor.onDidSave =>
+          @handleSave textEditor
+        textEditor.onDidDestroy ->
+          textEditorDisposable.dispose()
+          disposables.remove textEditorDisposable
+          return
+      )
+      disposables.add textEditorDisposable
+      return
 
   serialize: ->
 
   destroy: ->
 
-  handleSave: ->
-    @activeEditor = atom.workspace.getActiveTextEditor()
-
-    if @activeEditor
-      @filePath = @activeEditor.getURI()
+  handleSave: (@textEditor = atom.workspace.getActiveTextEditor()) ->
+    if @textEditor
+      @filePath = @textEditor.getURI()
       @fileExt = path.extname @filePath
 
       if @fileExt == '.less'
