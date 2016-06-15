@@ -25,7 +25,7 @@ class LessAutocompileView
         @getParams @filePath, (params) =>
           @compileLess params
 
-  writeFiles: (output, newPath, newFile) ->
+  writeFiles: (output, newPath, newFile, mapPath, mapFile) ->
     async.series
       css: (callback) =>
         if output.css
@@ -35,10 +35,8 @@ class LessAutocompileView
           callback null, null
       map: (callback) =>
         if output.map
-          newFile = "#{newFile}.map"
-
-          @writeFile output.map, newPath, newFile, ->
-            callback null, newFile
+          @writeFile output.map, mapPath, mapFile, ->
+            callback null, mapFile
         else
           callback null, null
     , (err, results) ->
@@ -70,7 +68,7 @@ class LessAutocompileView
       paths: [path.dirname path.resolve(params.file)]
       filename: path.basename params.file
       compress: if params.compress == 'true' then true else false
-      sourceMap: if params.sourcemap == 'true' then {} else false
+      sourceMap: if params.sourcemap? then (if params.sourcemap == 'true' then {sourceMapURL: path.basename params.out + ".map"} else {sourceMapURL: params.sourcemap}) else false
 
     rl = readline.createInterface
       input: fs.createReadStream params.file
@@ -92,8 +90,10 @@ class LessAutocompileView
       .then (output) =>
         newFile = path.resolve(path.dirname(params.file), params.out)
         newPath = path.dirname newFile
+        mapFile = if output.map? then path.resolve path.dirname(params.file), path.dirname(params.out), optionsLess.sourceMap?.sourceMapURL
+        mapPath = path.dirname mapFile
 
-        @writeFiles output, newPath, newFile
+        @writeFiles output, newPath, newFile, mapPath, mapFile
     , (err) ->
       if err
         atom.notifications.addError err.message,
