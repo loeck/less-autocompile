@@ -48,10 +48,12 @@ class LessAutocompileView
       else
         if results.map != null
           atom.notifications.addSuccess "Files created",
-            detail: "#{results.css}\n#{results.map}"
+            detail: "#{results.css}\n#{results.map}",
+            dismissable: true
         else
           atom.notifications.addSuccess "File created",
-            detail: results.css
+            detail: results.css,
+            dismissable: true
 
   writeFile: (contentFile, newPath, newFile, callback) ->
     mkdirp newPath, (err) ->
