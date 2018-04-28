@@ -1,12 +1,12 @@
 {
-  "name": "less-autocompile",
+  "name": "less-autocompile2",
   "main": "./lib/less-autocompile",
   "version": "1.0.0",
   "description": "Auto compile LESS",
-  "repository": "https://github.com/lohek/less-autocompile",
+  "repository": "https://github.com/sagarpanchal/less-autocompile2",
   "license": "MIT",
   "engines": {
-    "atom": ">=0.174.0 <2.0.0"
+    "atom": ">=1.23.0 <2.0.0"
   },
   "dependencies": {
     "async": "^0.9.0",
