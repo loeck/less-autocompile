@@ -14,14 +14,18 @@ class LessAutocompileView
 
   destroy: ->
 
+  getExtension : (filePath) ->
+    if filePath
+      return path.extname(filePath).substr(1)
+
   handleSave: ->
     @activeEditor = atom.workspace.getActiveTextEditor()
 
     if @activeEditor
       @filePath = @activeEditor.getURI()
-      @fileExt = path.extname @filePath
+      @fileExt = @getExtension(@filePath)
 
-      if @fileExt == '.less'
+      if @fileExt == 'less'
         @getParams @filePath, (params) =>
           @compileLess params
 
