@@ -26,8 +26,8 @@ class LessAutocompileView
           if params.main
             @allMains = params.main.split "|"
             @mainParams = params
-            # atom.notifications.addSuccess "handleSave() params.main: #{JSON.stringify params}",
-            #   dismissable: true
+            atom.notifications.addSuccess "Processing Multiple Files",
+              detail: "// main: #{@allMains}"
             @processNextMain @allMains
           else
             @compileLess params
@@ -35,27 +35,17 @@ class LessAutocompileView
   processNextMain: (thisAllMains) ->
     @params = {}
     @allMains = thisAllMains
-    # atom.notifications.addSuccess "processNextMain() #{@allMains}",
-    #   dismissable: true
     @thisMain = @allMains.pop()
-    # atom.notifications.addSuccess "processNextMain() #{@thisMain}, #{@allMains}",
-    #   dismissable: true
     @thisMainPath = path.resolve(path.dirname(@mainParams.file), @thisMain)
-    atom.notifications.addSuccess "processNextMain() #{@thisMainPath}, #{@allMains}",
-      dismissable: true
     @getParams @thisMainPath, (params) =>
       params.allMains = @allMains
-      # atom.notifications.addSuccess "processNextMain() getParams() #{JSON.stringify params}",
-      #   dismissable: true
       @compileLess params
 
-  writeFiles: (output, newPath, newFile, params) ->
-    atom.notifications.addSuccess "writeFiles() newPath #{newPath}",
-      dismissable: true
+  writeFiles: (output, newPath, newFile) ->
     async.series
       css: (callback) =>
         if output.css
-          @writeFile output.css, newPath, newFile, params, ->
+          @writeFile output.css, newPath, newFile, ->
             callback null, newFile
         else
           callback null, null
@@ -63,7 +53,7 @@ class LessAutocompileView
         if output.map
           newFile = "#{newFile}.map"
 
-          @writeFile output.map, newPath, newFile, params, ->
+          @writeFile output.map, newPath, newFile, ->
             callback null, newFile
         else
           callback null, null
@@ -75,24 +65,17 @@ class LessAutocompileView
         if results.map != null
           atom.notifications.addSuccess "Files created",
             detail: "#{results.css}\n#{results.map}"
-            dismissable: true
-          atom.notifications.addSuccess "writeFiles() params.allMains #{params.allMains}",
-            dismissable: true
-          if params.allMains.length > 0
-            @processNextMain params.allMains
         else
           atom.notifications.addSuccess "File created",
             detail: results.css
-            dismissable: true
 
-
-  writeFile: (contentFile, newPath, newFile, params, callback) ->
+  writeFile: (contentFile, newPath, newFile, callback) ->
     mkdirp newPath, (err) ->
       if err
         atom.notifications.addError err,
           dismissable: true
       else
-        fs.writeFile newFile, contentFile, params, callback
+        fs.writeFile newFile, contentFile, callback
 
   compileLess: (params) ->
     return if !params.out
@@ -104,9 +87,6 @@ class LessAutocompileView
       filename: path.basename params.file
       compress: if params.compress == 'true' then true else false
       sourceMap: if params.sourcemap == 'true' then {} else false
-
-    atom.notifications.addSuccess "compileLess() #{JSON.stringify params} #{JSON.stringify optionsLess}",
-      dismissable: true
 
     rl = readline.createInterface
       input: fs.createReadStream params.file
@@ -129,7 +109,10 @@ class LessAutocompileView
         newFile = path.resolve(path.dirname(params.file), params.out)
         newPath = path.dirname newFile
 
-        @writeFiles output, newPath, newFile, params
+        @writeFiles output, newPath, newFile
+        if params.allMains.length > 0
+          @processNextMain params.allMains
+
     , (err) ->
       if err
         atom.notifications.addError err.message,
@@ -137,8 +120,6 @@ class LessAutocompileView
           dismissable: true
 
   getParams: (filePath, callback) ->
-    atom.notifications.addError "getParams() start filePath #{filePath}",
-      dismissable: true
     if !fs.existsSync filePath
       atom.notifications.addError "#{filePath} not exist",
         dismissable: true
@@ -157,8 +138,6 @@ class LessAutocompileView
       @parseFirstLine line
 
     rl.on 'close', =>
-      atom.notifications.addError "getParams() close #{JSON.stringify @params}",
-        dismissable: true
       callback @params
 
   parseFirstLine: (line) ->
