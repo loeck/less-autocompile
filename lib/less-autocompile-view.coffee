@@ -25,15 +25,16 @@ class LessAutocompileView
         @getParams @filePath, (params) =>
           if params.main
             @allMains = params.main.split "|"
+            @mainParams = params
             # atom.notifications.addSuccess "handleSave() params.main: #{JSON.stringify params}",
             #   dismissable: true
-            @processNextMain @allMains, params
+            @processNextMain @allMains
           else
             @compileLess params
 
-  processNextMain: (thisAllMains, thisMainParams) ->
-    @mainParams = thisMainParams
+  processNextMain: (thisAllMains) ->
     @params = {}
+    @allMains = thisAllMains
     # atom.notifications.addSuccess "processNextMain() #{@allMains}",
     #   dismissable: true
     @thisMain = @allMains.pop()
@@ -43,17 +44,18 @@ class LessAutocompileView
     atom.notifications.addSuccess "processNextMain() #{@thisMainPath}, #{@allMains}",
       dismissable: true
     @getParams @thisMainPath, (params) =>
-      atom.notifications.addSuccess "processNextMain() getParams() #{JSON.stringify params}",
-        dismissable: true
+      params.allMains = @allMains
+      # atom.notifications.addSuccess "processNextMain() getParams() #{JSON.stringify params}",
+      #   dismissable: true
       @compileLess params
 
-  writeFiles: (output, newPath, newFile) ->
+  writeFiles: (output, newPath, newFile, params) ->
     atom.notifications.addSuccess "writeFiles() newPath #{newPath}",
       dismissable: true
     async.series
       css: (callback) =>
         if output.css
-          @writeFile output.css, newPath, newFile, ->
+          @writeFile output.css, newPath, newFile, params, ->
             callback null, newFile
         else
           callback null, null
@@ -61,7 +63,7 @@ class LessAutocompileView
         if output.map
           newFile = "#{newFile}.map"
 
-          @writeFile output.map, newPath, newFile, ->
+          @writeFile output.map, newPath, newFile, params, ->
             callback null, newFile
         else
           callback null, null
@@ -74,23 +76,27 @@ class LessAutocompileView
           atom.notifications.addSuccess "Files created",
             detail: "#{results.css}\n#{results.map}"
             dismissable: true
+          atom.notifications.addSuccess "writeFiles() params.allMains #{params.allMains}",
+            dismissable: true
+          if params.allMains.length > 0
+            @processNextMain params.allMains
         else
           atom.notifications.addSuccess "File created",
             detail: results.css
             dismissable: true
 
-  writeFile: (contentFile, newPath, newFile, callback) ->
+
+  writeFile: (contentFile, newPath, newFile, params, callback) ->
     mkdirp newPath, (err) ->
       if err
         atom.notifications.addError err,
           dismissable: true
       else
-        fs.writeFile newFile, contentFile, callback
+        fs.writeFile newFile, contentFile, params, callback
 
   compileLess: (params) ->
     return if !params.out
-    atom.notifications.addSuccess "compileLess() #{JSON.stringify params}",
-      dismissable: true
+
     firstLine = true
     contentFile = []
     optionsLess =
@@ -99,6 +105,9 @@ class LessAutocompileView
       compress: if params.compress == 'true' then true else false
       sourceMap: if params.sourcemap == 'true' then {} else false
 
+    atom.notifications.addSuccess "compileLess() #{JSON.stringify params} #{JSON.stringify optionsLess}",
+      dismissable: true
+
     rl = readline.createInterface
       input: fs.createReadStream params.file
       terminal: false
@@ -106,21 +115,21 @@ class LessAutocompileView
     rl.on 'line', (line) ->
       if !firstLine
         contentFile.push line
+
       firstLine = false
 
     rl.on 'close', =>
-      renderLess params, contentFile, optionsLess
+      @renderLess params, contentFile, optionsLess
 
   renderLess: (params, contentFile, optionsLess) ->
-    atom.notifications.addSuccess "renderLess() #{JSON.stringify params}",
-      dismissable: true
-    @newContentFile = contentFile.join "\n"
-    less.render @newContentFile, optionsLess
-      .then (output) =>
-        @newFile = path.resolve(path.dirname(params.file), params.out)
-        @newPath = path.dirname @newFile
+    contentFile = contentFile.join "\n"
 
-        @writeFiles output, @newPath, @newFile
+    less.render contentFile, optionsLess
+      .then (output) =>
+        newFile = path.resolve(path.dirname(params.file), params.out)
+        newPath = path.dirname newFile
+
+        @writeFiles output, newPath, newFile, params
     , (err) ->
       if err
         atom.notifications.addError err.message,
