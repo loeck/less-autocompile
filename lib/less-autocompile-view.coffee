@@ -23,7 +23,23 @@ class LessAutocompileView
 
       if @fileExt == '.less'
         @getParams @filePath, (params) =>
-          @compileLess params
+          if params.main
+            @allMains = params.main.split "|"
+            @mainParams = params
+            atom.notifications.addSuccess "Processing Multiple Files",
+              detail: "// main: #{@allMains}"
+            @processNextMain @allMains
+          else
+            @compileLess params
+
+  processNextMain: (thisAllMains) ->
+    @params = {}
+    @allMains = thisAllMains
+    @thisMain = @allMains.pop()
+    @thisMainPath = path.resolve(path.dirname(@mainParams.file), @thisMain)
+    @getParams @thisMainPath, (params) =>
+      params.allMains = @allMains
+      @compileLess params
 
   writeFiles: (output, newPath, newFile) ->
     async.series
@@ -94,6 +110,9 @@ class LessAutocompileView
         newPath = path.dirname newFile
 
         @writeFiles output, newPath, newFile
+        if params.allMains.length > 0
+          @processNextMain params.allMains
+
     , (err) ->
       if err
         atom.notifications.addError err.message,
@@ -104,7 +123,6 @@ class LessAutocompileView
     if !fs.existsSync filePath
       atom.notifications.addError "#{filePath} not exist",
         dismissable: true
-
       return
 
     @params =
@@ -120,10 +138,7 @@ class LessAutocompileView
       @parseFirstLine line
 
     rl.on 'close', =>
-      if @params.main
-        @getParams path.resolve(path.dirname(filePath), @params.main), callback
-      else
-        callback @params
+      callback @params
 
   parseFirstLine: (line) ->
     return if !@firstLine
